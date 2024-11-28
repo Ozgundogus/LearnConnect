@@ -35,7 +35,7 @@ class NetworkManager {
             return
         }
         
-        print("Fetching videos from URL: \(url)") // Debug için URL'i yazdır
+        print("Fetching videos from URL: \(url)")
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
@@ -52,7 +52,7 @@ class NetworkManager {
                 return
             }
             
-            print("Video API Response Status Code: \(httpResponse.statusCode)") // Debug için status code'u yazdır
+            print("Video API Response Status Code: \(httpResponse.statusCode)")
             
             guard (200...299).contains(httpResponse.statusCode) else {
                 DispatchQueue.main.async {
@@ -78,7 +78,7 @@ class NetworkManager {
                     completion(.success(videoResponse.items))
                 }
             } catch {
-                print("Decoding error: \(error)") // Debug için decode hatasını yazdır
+                print("Decoding error: \(error)")
                 DispatchQueue.main.async {
                     completion(.failure(.decodingError))
                 }
@@ -101,7 +101,7 @@ class NetworkManager {
             return
         }
         
-        print("Fetching categories from URL: \(url)") // Debug için URL'i yazdır
+        print("Fetching categories from URL: \(url)")
         
         let task = URLSession.shared.dataTask(with: url) { data, response, error in
             if let error = error {
@@ -118,7 +118,7 @@ class NetworkManager {
                 return
             }
             
-            print("Categories API Response Status Code: \(httpResponse.statusCode)") // Debug için status code'u yazdır
+            print("Categories API Response Status Code: \(httpResponse.statusCode)")
             
             guard (200...299).contains(httpResponse.statusCode) else {
                 DispatchQueue.main.async {
@@ -144,7 +144,7 @@ class NetworkManager {
                     completion(.success(categoryResponse.items))
                 }
             } catch {
-                print("Decoding error: \(error)") // Debug için decode hatasını yazdır
+                print("Decoding error: \(error)")
                 DispatchQueue.main.async {
                     completion(.failure(.decodingError))
                 }
@@ -163,15 +163,12 @@ class NetworkManager {
             URLQueryItem(name: NetworkConstants.QueryParams.key, value: apiKey)
         ]
         
-        // Eğer query boş değilse ekle
         if !query.isEmpty {
             queryItems.append(URLQueryItem(name: NetworkConstants.QueryParams.query, value: query))
         }
         
-        // Kategori ID'si varsa ekle
         if let categoryId = categoryId {
             queryItems.append(URLQueryItem(name: NetworkConstants.QueryParams.videoCategoryId, value: categoryId))
-            // Kategori araması için relevance yerine date parametresini kullanalım
             queryItems.append(URLQueryItem(name: "order", value: "date"))
         }
         
@@ -235,7 +232,6 @@ class NetworkManager {
     }
 }
 
-// API Error Response modeli
 struct APIErrorResponse: Codable {
     let error: APIError
 }

@@ -18,7 +18,6 @@ class ProfileViewModel {
     // MARK: - Methods
     func updateProfileImage(_ image: UIImage) {
         profileImage = image
-        // Burada profil fotoğrafını kaydetme işlemleri yapılabilir
-        // Örneğin: UserDefaults, Core Data veya bir backend servisi
+       
     }
 } 

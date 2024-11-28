@@ -81,7 +81,7 @@ class HomeViewController: UIViewController {
         imageView.contentMode = .scaleAspectFill
         imageView.clipsToBounds = true
         imageView.layer.cornerRadius = 15
-        imageView.backgroundColor = .systemGray5 // Placeholder background
+        imageView.backgroundColor = .systemGray5
         imageView.image = UIImage(systemName: "person.circle.fill")
         imageView.tintColor = .systemGray2
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -90,16 +90,16 @@ class HomeViewController: UIViewController {
     
     private let viewModel = HomeViewModel()
     
-    // Önce ortak corner radius değeri tanımlayalım
+
     private let commonCornerRadius: CGFloat = 12
     
-    // Banner için model oluşturalım
+
     private struct BannerItem {
         let title: String
         let image: String
     }
     
-    // Banner verilerini güncelleyelim
+
     private let bannerItems: [BannerItem] = [
         BannerItem(title: "Sports", image: "Sports"),
         BannerItem(title: "Travel", image: "Travel"),
@@ -107,6 +107,9 @@ class HomeViewController: UIViewController {
         BannerItem(title: "Education", image: "Education"),
         BannerItem(title: "Nature", image: "Nature")
     ]
+    
+  
+    private var notificationButton: UIBarButtonItem!
     
     // MARK: - Lifecycle
     override func viewDidLoad() {
@@ -119,12 +122,20 @@ class HomeViewController: UIViewController {
         setupProfileImageObserver()
         loadProfileImage()
         
-        // Prevent going back
+  
         navigationItem.hidesBackButton = true
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         
-        // Additional navigation prevention
+  
         navigationController?.navigationBar.isUserInteractionEnabled = true
+        
+   
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(updateBadgeCount(_:)),
+            name: NSNotification.Name("BadgeCountDidChange"),
+            object: nil
+        )
     }
     
     override func themeDidChange(_ notification: Notification) {
@@ -132,12 +143,12 @@ class HomeViewController: UIViewController {
         guard let theme = notification.object as? Theme else { return }
         
         
-        // Update collection views
+       
         bannerCollectionView.backgroundColor = theme.backgroundColor
         categoriesCollectionView.backgroundColor = theme.backgroundColor
         coursesCollectionView.backgroundColor = theme.backgroundColor
         
-        // Reload collection views to update cell appearances
+
         bannerCollectionView.reloadData()
         categoriesCollectionView.reloadData()
         coursesCollectionView.reloadData()
@@ -153,11 +164,11 @@ class HomeViewController: UIViewController {
     private func setupUI() {
         view.backgroundColor = .systemBackground
         
-        // Add scrollView
+
         view.addSubview(scrollView)
         scrollView.addSubview(contentView)
         
-        // Add subviews to contentView
+
         contentView.addSubview(bannerCollectionView)
         contentView.addSubview(categoriesCollectionView)
         contentView.addSubview(coursesCollectionView)
@@ -200,7 +211,7 @@ class HomeViewController: UIViewController {
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.title = "LearnConnect"
         
-        // Configure navigation bar appearance
+        
         let appearance = UINavigationBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = .systemBackground
@@ -212,10 +223,10 @@ class HomeViewController: UIViewController {
         navigationController?.navigationBar.compactAppearance = appearance
         navigationController?.navigationBar.tintColor = .label
         
-        // Disable swipe back gesture
+        
         navigationController?.interactivePopGestureRecognizer?.delegate = nil
         
-        // Setup profile image view with fixed size
+      
         let containerView = UIView()
         containerView.translatesAutoresizingMaskIntoConstraints = false
         containerView.addSubview(profileImageView)
@@ -231,35 +242,39 @@ class HomeViewController: UIViewController {
         
         let profileButton = UIBarButtonItem(customView: containerView)
         
-        // Add right bar button items with proper configuration
+      
+        notificationButton = UIBarButtonItem(
+            image: UIImage(systemName: "bell")?.withConfiguration(
+                UIImage.SymbolConfiguration(weight: .medium)
+            ),
+            style: .plain,
+            target: self,
+            action: #selector(notificationButtonTapped)
+        )
+        notificationButton.tintColor = .label
+        
         let searchButton = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass")?.withConfiguration(UIImage.SymbolConfiguration(weight: .medium)), 
                                          style: .plain, 
                                          target: self, 
                                          action: #selector(searchButtonTapped))
         searchButton.tintColor = .label
         
-        let notificationButton = UIBarButtonItem(image: UIImage(systemName: "bell")?.withConfiguration(UIImage.SymbolConfiguration(weight: .medium)), 
-                                               style: .plain, 
-                                               target: self, 
-                                               action: #selector(notificationButtonTapped))
-        notificationButton.tintColor = .label
-        
         navigationItem.leftBarButtonItem = profileButton
         navigationItem.rightBarButtonItems = [notificationButton, searchButton]
         
-        // Setup search controller
+       
         navigationItem.searchController = searchController
         navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
     }
     
     private func setupCollectionViews() {
-        // Register cells
+        
         bannerCollectionView.register(UICollectionViewCell.self, forCellWithReuseIdentifier: "BannerCell")
         categoriesCollectionView.register(CategoryCollectionViewCell.self, forCellWithReuseIdentifier: CategoryCollectionViewCell.identifier)
         coursesCollectionView.register(CourseCollectionViewCell.self, forCellWithReuseIdentifier: CourseCollectionViewCell.identifier)
         
-        // Set delegates
+      
         bannerCollectionView.delegate = self
         bannerCollectionView.dataSource = self
         categoriesCollectionView.delegate = self
@@ -275,19 +290,21 @@ class HomeViewController: UIViewController {
     }
     
     @objc private func notificationButtonTapped() {
-        // Bildirim işlemleri için gerekli kodlar buraya eklenecek
-        print("Notification button tapped")
+        let notificationVC = NotificationViewController()
+        let navController = UINavigationController(rootViewController: notificationVC)
+        navController.modalPresentationStyle = .fullScreen
+        present(navController, animated: true)
     }
     
-    // Video oynatma metodunu sınıfın içine taşıyalım
+   
     private func playVideo(_ video: Video) {
         let videoId = video.id.videoId
         if let youtubeURL = URL(string: "youtube://\(videoId)"),
            UIApplication.shared.canOpenURL(youtubeURL) {
-            // YouTube uygulaması yüklüyse onu aç
+            
             UIApplication.shared.open(youtubeURL)
         } else if let webURL = URL(string: "https://www.youtube.com/watch?v=\(videoId)") {
-            // YouTube uygulaması yoksa web'de aç
+            
             let videoPlayerVC = VideoPlayerViewController(videoURL: webURL)
             videoPlayerVC.modalPresentationStyle = .fullScreen
             present(videoPlayerVC, animated: true)
@@ -320,6 +337,23 @@ class HomeViewController: UIViewController {
     deinit {
         NotificationCenter.default.removeObserver(self)
     }
+    
+  
+    @objc private func updateBadgeCount(_ notification: Notification) {
+        if let count = notification.object as? Int {
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                
+                
+                let imageName = count > 0 ? "bell.fill" : "bell"
+                self.notificationButton.image = UIImage(
+                    systemName: imageName
+                )?.withConfiguration(
+                    UIImage.SymbolConfiguration(weight: .medium)
+                )
+            }
+        }
+    }
 }
 
 // MARK: - HomeViewModelDelegate
@@ -333,7 +367,7 @@ extension HomeViewController: HomeViewModelDelegate {
     }
     
     func didReceiveError(_ error: Error) {
-        // Burada hata durumunda kullanıcıya alert gösterebilirsiniz
+       
         print("Error: \(error)")
     }
 }
@@ -354,7 +388,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "CategoryCell", for: indexPath)
             let isSelected = viewModel.selectedCategoryIndex == indexPath.item
             
-            // Add label for category name
+           
             let label = cell.viewWithTag(100) as? UILabel ?? {
                 let label = UILabel()
                 label.tag = 100
@@ -371,7 +405,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
                 return label
             }()
             
-            // Seçili duruma göre renkleri ayarla
+            
             if isSelected {
                 cell.backgroundColor = .systemBlue
                 label.textColor = .white
@@ -392,7 +426,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
             let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "BannerCell", for: indexPath)
             let bannerItem = viewModel.bannerItems[indexPath.item]
             
-            // Banner image view
+           
             let imageView = cell.viewWithTag(104) as? UIImageView ?? {
                 let iv = UIImageView()
                 iv.tag = 104
@@ -409,7 +443,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
                 return iv
             }()
             
-            // Banner için gradient
+           
             let gradientLayer = cell.layer.sublayers?.first as? CAGradientLayer ?? {
                 let gradientLayer = CAGradientLayer()
                 gradientLayer.colors = [
@@ -421,7 +455,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
                 return gradientLayer
             }()
             
-            // Banner başlık
+           
             let label = cell.viewWithTag(103) as? UILabel ?? {
                 let label = UILabel()
                 label.tag = 103
@@ -438,7 +472,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
                 return label
             }()
             
-            // İçeriği güncelle
+            
             imageView.image = UIImage(named: bannerItem.image)
             label.text = bannerItem.title
             gradientLayer.frame = cell.bounds
@@ -457,7 +491,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if collectionView == bannerCollectionView {
-            let padding: CGFloat = 32 // Sol ve sağ padding toplamı
+            let padding: CGFloat = 32
             let itemWidth = view.frame.width - padding
             return CGSize(width: itemWidth, height: 180)
         } else if collectionView == categoriesCollectionView {
@@ -475,7 +509,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         if collectionView == categoriesCollectionView {
-            // Önceki seçili hücreyi bul ve normal haline getir
+            
             if let oldCell = collectionView.cellForItem(at: IndexPath(item: viewModel.selectedCategoryIndex, section: 0)) {
                 oldCell.backgroundColor = .systemGray6
                 if let label = oldCell.viewWithTag(100) as? UILabel {
@@ -484,7 +518,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
                 oldCell.transform = .identity
             }
             
-            // Yeni seçilen hücreyi güncelle
+            
             if let newCell = collectionView.cellForItem(at: indexPath) {
                 newCell.backgroundColor = .systemBlue
                 if let label = newCell.viewWithTag(100) as? UILabel {
@@ -495,7 +529,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
                 }
             }
             
-            // ViewModel'i güncelle ve seçilen kategoriye scroll yap
+            
             viewModel.selectCategory(at: indexPath.item)
             collectionView.scrollToItem(at: indexPath, at: .centeredHorizontally, animated: true)
         } else if collectionView == bannerCollectionView {
@@ -517,16 +551,16 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, minimumInteritemSpacingForSectionAt section: Int) -> CGFloat {
         if collectionView == categoriesCollectionView {
-            return 6 // Kategoriler arası boşluğu azalttık
+            return 6
         } else if collectionView == coursesCollectionView {
-            return 10 // Course hücreleri arası boşluk
+            return 10
         }
         return 15
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, insetForSectionAt section: Int) -> UIEdgeInsets {
         if collectionView == bannerCollectionView {
-            return .zero // Banner için section inset'leri kaldır, contentInset kullanıyoruz
+            return .zero
         } else if collectionView == coursesCollectionView {
             return UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         }
@@ -542,7 +576,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
         let nearestPage = round(targetX / itemWidth)
         let xOffset = nearestPage * itemWidth
         
-        // Öğeyi ortala
+        
         let inset = (scrollView.frame.width - itemWidth) / 2
         targetContentOffset.pointee = CGPoint(x: xOffset - inset, y: 0)
     }
@@ -562,7 +596,7 @@ extension HomeViewController: UISearchResultsUpdating, UISearchBarDelegate {
     
     func searchBarCancelButtonClicked(_ searchBar: UISearchBar) {
         searchController.isActive = false
-        viewModel.searchVideos(with: "") // Aramayı temizle ve normal videoları göster
+        viewModel.searchVideos(with: "")
     }
     
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
@@ -573,12 +607,12 @@ extension HomeViewController: UISearchResultsUpdating, UISearchBarDelegate {
     }
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
-        // Prevent any navigation when search begins
+      
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
     }
     
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
-        // Keep navigation disabled after search ends
+       
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
     }
 }
@@ -593,7 +627,7 @@ extension HomeViewController: CourseCollectionViewCellDelegate {
                 videoUrl: "https://www.youtube.com/watch?v=\(video.id.videoId)",
                 thumbnailUrl: video.snippet.thumbnails.high.url
             )
-            // Update cell UI
+            
             cell.configure(with: video, isBookmarked: true)
         }
     }
@@ -607,7 +641,7 @@ extension HomeViewController: CourseCollectionViewCellDelegate {
                 thumbnailUrl: video.snippet.thumbnails.high.url,
                 isDownloaded: true
             )
-            // Show success toast message
+          
             ToastManager.showToast(message: "Videoyu başarıyla indirdiniz", in: self)
         }
     }

@@ -98,7 +98,6 @@ class CategoryDetailViewController: UIViewController {
         dismiss(animated: true)
     }
     
-    // Video oynatma metodunu sınıfın içine taşıyalım
     private func playVideo(_ video: Video) {
         let videoId = video.id.videoId
         if let youtubeURL = URL(string: "youtube://\(videoId)"),
@@ -128,8 +127,8 @@ extension CategoryDetailViewController: UICollectionViewDelegate, UICollectionVi
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.bounds.width - 10) / 2 // 2 sütun, 10pt boşluk
-        return CGSize(width: width, height: width * 1.4) // 1.4 aspect ratio
+        let width = (collectionView.bounds.width - 10) / 2
+        return CGSize(width: width, height: width * 1.4)
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
@@ -148,7 +147,6 @@ extension CategoryDetailViewController: CourseCollectionViewCellDelegate {
                 videoUrl: "https://www.youtube.com/watch?v=\(video.id.videoId)",
                 thumbnailUrl: video.snippet.thumbnails.high.url
             )
-            // Update cell UI
             cell.configure(with: video, isBookmarked: true)
         }
     }
@@ -162,7 +160,6 @@ extension CategoryDetailViewController: CourseCollectionViewCellDelegate {
                 thumbnailUrl: video.snippet.thumbnails.high.url,
                 isDownloaded: true
             )
-            // Show success toast message
             ToastManager.showToast(message: "Videoyu başarıyla indirdiniz", in: self)
         }
     }

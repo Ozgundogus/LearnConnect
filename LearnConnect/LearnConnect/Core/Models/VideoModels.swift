@@ -19,7 +19,6 @@ struct Video: Codable {
     init(from decoder: Decoder) throws {
         let container = try decoder.container(keyedBy: CodingKeys.self)
         
-        // ID'yi string veya dictionary olarak decode et
         if let stringID = try? container.decode(String.self, forKey: .id) {
             self.id = VideoID(videoId: stringID)
         } else {

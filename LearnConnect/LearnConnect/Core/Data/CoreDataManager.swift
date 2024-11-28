@@ -2,12 +2,11 @@ import CoreData
 import Foundation
 
 class CoreDataManager {
-    // Singleton instance
+   
     static let shared = CoreDataManager()
 
-    // Persistent container setup
     lazy var persistentContainer: NSPersistentContainer = {
-        let container = NSPersistentContainer(name: "LearnConnect") // Core Data model adını yazın
+        let container = NSPersistentContainer(name: "LearnConnect")
         container.loadPersistentStores { _, error in
             if let error = error {
                 fatalError("Unresolved error \(error)")
@@ -16,12 +15,10 @@ class CoreDataManager {
         return container
     }()
 
-    // Context for Core Data operations
     var context: NSManagedObjectContext {
         return persistentContainer.viewContext
     }
 
-    // Save changes to the context
     func saveContext() {
         if context.hasChanges {
             do {
@@ -35,7 +32,6 @@ class CoreDataManager {
 
     // MARK: - SavedVideo Operations
 
-    // Fetch all saved videos
     func fetchSavedVideos() -> [SavedVideo] {
         let fetchRequest: NSFetchRequest<SavedVideo> = SavedVideo.fetchRequest()
         do {
@@ -46,7 +42,6 @@ class CoreDataManager {
         }
     }
 
-    // Fetch only downloaded videos
     func fetchDownloadedVideos() -> [SavedVideo] {
         let fetchRequest: NSFetchRequest<SavedVideo> = SavedVideo.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "isDownloaded == true")
@@ -58,7 +53,6 @@ class CoreDataManager {
         }
     }
 
-    // Save a new video
     func saveSavedVideo(title: String, videoUrl: String, thumbnailUrl: String? = nil, isDownloaded: Bool = false) {
         let savedVideo = SavedVideo(context: context)
         savedVideo.title = title
@@ -70,7 +64,6 @@ class CoreDataManager {
         saveContext()
     }
 
-    // Delete a saved video
     func deleteSavedVideo(_ video: SavedVideo) {
         context.delete(video)
         saveContext()
@@ -78,7 +71,6 @@ class CoreDataManager {
 
     // MARK: - BookmarkedVideo Operations
 
-    // Fetch all bookmarked videos
     func fetchBookmarkedVideos() -> [BookmarkedVideo] {
         let fetchRequest: NSFetchRequest<BookmarkedVideo> = BookmarkedVideo.fetchRequest()
         do {
@@ -89,7 +81,6 @@ class CoreDataManager {
         }
     }
 
-    // Save a new bookmarked video
     func saveBookmarkedVideo(title: String, videoUrl: String, thumbnailUrl: String? = nil) {
         let bookmarkedVideo = BookmarkedVideo(context: context)
         bookmarkedVideo.title = title
@@ -100,7 +91,6 @@ class CoreDataManager {
         saveContext()
     }
 
-    // Delete a bookmarked video
     func deleteBookmarkedVideo(_ video: BookmarkedVideo) {
         context.delete(video)
         saveContext()

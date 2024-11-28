@@ -150,9 +150,17 @@ class SignInViewController: UIViewController {
                 // User found, check password
                 if user.password == password {
                     print("Giriş başarılı - Kullanıcı adı: \(username)")
-                    let customTabBarController = CustomTabBarController()
-                    customTabBarController.modalPresentationStyle = .fullScreen
-                    present(customTabBarController, animated: true)
+                    
+                    // Save login state
+                    UserDefaults.standard.set(true, forKey: "isUserLoggedIn")
+                    UserDefaults.standard.set(username, forKey: "loggedInUsername")
+                    UserDefaults.standard.synchronize()
+                    
+                    // Switch to tab bar controller using SceneDelegate
+                    if let sceneDelegate = UIApplication.shared.connectedScenes.first?.delegate as? SceneDelegate {
+                        let tabBarController = CustomTabBarController()
+                        sceneDelegate.switchRootViewController(to: tabBarController, animated: true)
+                    }
                 } else {
                     print("Giriş başarısız - Şifre hatalı - Kullanıcı adı: \(username)")
                     ToastManager.showToast(
