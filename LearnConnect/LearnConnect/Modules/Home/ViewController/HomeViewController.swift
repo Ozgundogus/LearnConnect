@@ -17,6 +17,8 @@ class HomeViewController: UIViewController {
         controller.searchBar.placeholder = "Search courses..."
         controller.hidesNavigationBarDuringPresentation = false
         controller.searchBar.delegate = self
+        controller.isActive = false
+        controller.definesPresentationContext = true
         return controller
     }()
     
@@ -33,19 +35,10 @@ class HomeViewController: UIViewController {
         return view
     }()
     
-    private let titleLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "Find a course you\nwant to learn."
-        label.numberOfLines = 2
-        label.font = .systemFont(ofSize: 28, weight: .bold)
-        return label
-    }()
-    
     private let bannerCollectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
         layout.scrollDirection = .horizontal
-        layout.minimumLineSpacing = 0
+        layout.minimumLineSpacing = 16
         layout.minimumInteritemSpacing = 0
         let collectionView = UICollectionView(frame: .zero, collectionViewLayout: layout)
         collectionView.translatesAutoresizingMaskIntoConstraints = false
@@ -53,6 +46,7 @@ class HomeViewController: UIViewController {
         collectionView.backgroundColor = .clear
         collectionView.decelerationRate = .fast
         collectionView.isPagingEnabled = false
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
         return collectionView
     }()
     
@@ -65,24 +59,8 @@ class HomeViewController: UIViewController {
         collectionView.translatesAutoresizingMaskIntoConstraints = false
         collectionView.showsHorizontalScrollIndicator = false
         collectionView.backgroundColor = .clear
-        collectionView.contentInset = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 16)
+        collectionView.contentInset = UIEdgeInsets(top: 0, left: 12, bottom: 0, right: 16)
         return collectionView
-    }()
-    
-    private let learnFlexLabel: UILabel = {
-        let label = UILabel()
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.text = "LearnFlex"
-        label.font = .systemFont(ofSize: 24, weight: .bold)
-        return label
-    }()
-    
-    private let seeAllButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.translatesAutoresizingMaskIntoConstraints = false
-        button.setTitle("See All", for: .normal)
-        button.setTitleColor(.systemGray, for: .normal)
-        return button
     }()
     
     private let coursesCollectionView: UICollectionView = {
@@ -106,6 +84,7 @@ class HomeViewController: UIViewController {
         imageView.backgroundColor = .systemGray5 // Placeholder background
         imageView.image = UIImage(systemName: "person.circle.fill")
         imageView.tintColor = .systemGray2
+        imageView.translatesAutoresizingMaskIntoConstraints = false
         return imageView
     }()
     
@@ -137,16 +116,21 @@ class HomeViewController: UIViewController {
         setupUI()
         configureNavigationBar()
         setupCollectionViews()
+        setupProfileImageObserver()
+        loadProfileImage()
+        
+        // Prevent going back
+        navigationItem.hidesBackButton = true
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+        
+        // Additional navigation prevention
+        navigationController?.navigationBar.isUserInteractionEnabled = true
     }
     
     override func themeDidChange(_ notification: Notification) {
         super.themeDidChange(notification)
         guard let theme = notification.object as? Theme else { return }
         
-        // Update UI elements
-        titleLabel.textColor = theme.textColor
-        learnFlexLabel.textColor = theme.textColor
-        seeAllButton.tintColor = theme.secondaryTextColor
         
         // Update collection views
         bannerCollectionView.backgroundColor = theme.backgroundColor
@@ -174,11 +158,8 @@ class HomeViewController: UIViewController {
         scrollView.addSubview(contentView)
         
         // Add subviews to contentView
-        contentView.addSubview(titleLabel)
         contentView.addSubview(bannerCollectionView)
         contentView.addSubview(categoriesCollectionView)
-        contentView.addSubview(learnFlexLabel)
-        contentView.addSubview(seeAllButton)
         contentView.addSubview(coursesCollectionView)
         
         setupConstraints()
@@ -211,18 +192,7 @@ class HomeViewController: UIViewController {
             coursesCollectionView.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
             coursesCollectionView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor),
             coursesCollectionView.heightAnchor.constraint(equalToConstant: 280),
-            
-            titleLabel.topAnchor.constraint(equalTo: coursesCollectionView.bottomAnchor, constant: 16),
-            titleLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            titleLabel.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            
-            learnFlexLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 16),
-            learnFlexLabel.leadingAnchor.constraint(equalTo: contentView.leadingAnchor, constant: 16),
-            
-            seeAllButton.centerYAnchor.constraint(equalTo: learnFlexLabel.centerYAnchor),
-            seeAllButton.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
-            
-            learnFlexLabel.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16)
+            coursesCollectionView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -16)
         ])
     }
     
@@ -240,21 +210,46 @@ class HomeViewController: UIViewController {
         navigationController?.navigationBar.standardAppearance = appearance
         navigationController?.navigationBar.scrollEdgeAppearance = appearance
         navigationController?.navigationBar.compactAppearance = appearance
+        navigationController?.navigationBar.tintColor = .label
         
-        // Setup profile image view
-        profileImageView.frame = CGRect(x: 0, y: 0, width: 30, height: 30)
-        let profileButton = UIBarButtonItem(customView: profileImageView)
+        // Disable swipe back gesture
+        navigationController?.interactivePopGestureRecognizer?.delegate = nil
         
-        // Add right bar button items
-        let searchButton = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass"), style: .plain, target: self, action: #selector(searchButtonTapped))
-        let notificationButton = UIBarButtonItem(image: UIImage(systemName: "bell"), style: .plain, target: self, action: #selector(notificationButtonTapped))
+        // Setup profile image view with fixed size
+        let containerView = UIView()
+        containerView.translatesAutoresizingMaskIntoConstraints = false
+        containerView.addSubview(profileImageView)
+        
+        NSLayoutConstraint.activate([
+            profileImageView.widthAnchor.constraint(equalToConstant: 30),
+            profileImageView.heightAnchor.constraint(equalToConstant: 30),
+            profileImageView.centerXAnchor.constraint(equalTo: containerView.centerXAnchor),
+            profileImageView.centerYAnchor.constraint(equalTo: containerView.centerYAnchor),
+            containerView.widthAnchor.constraint(equalToConstant: 30),
+            containerView.heightAnchor.constraint(equalToConstant: 30)
+        ])
+        
+        let profileButton = UIBarButtonItem(customView: containerView)
+        
+        // Add right bar button items with proper configuration
+        let searchButton = UIBarButtonItem(image: UIImage(systemName: "magnifyingglass")?.withConfiguration(UIImage.SymbolConfiguration(weight: .medium)), 
+                                         style: .plain, 
+                                         target: self, 
+                                         action: #selector(searchButtonTapped))
+        searchButton.tintColor = .label
+        
+        let notificationButton = UIBarButtonItem(image: UIImage(systemName: "bell")?.withConfiguration(UIImage.SymbolConfiguration(weight: .medium)), 
+                                               style: .plain, 
+                                               target: self, 
+                                               action: #selector(notificationButtonTapped))
+        notificationButton.tintColor = .label
         
         navigationItem.leftBarButtonItem = profileButton
         navigationItem.rightBarButtonItems = [notificationButton, searchButton]
         
         // Setup search controller
         navigationItem.searchController = searchController
-        navigationItem.hidesSearchBarWhenScrolling = true
+        navigationItem.hidesSearchBarWhenScrolling = false
         definesPresentationContext = true
     }
     
@@ -275,7 +270,8 @@ class HomeViewController: UIViewController {
     
     // MARK: - Actions
     @objc private func searchButtonTapped() {
-        navigationItem.searchController?.isActive = true
+        searchController.isActive = true
+        searchController.searchBar.becomeFirstResponder()
     }
     
     @objc private func notificationButtonTapped() {
@@ -296,6 +292,33 @@ class HomeViewController: UIViewController {
             videoPlayerVC.modalPresentationStyle = .fullScreen
             present(videoPlayerVC, animated: true)
         }
+    }
+    
+    private func setupProfileImageObserver() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(profileImageDidChange(_:)),
+            name: NSNotification.Name("ProfileImageDidChange"),
+            object: nil
+        )
+    }
+    
+    @objc private func profileImageDidChange(_ notification: Notification) {
+        if let imageData = notification.object as? Data,
+           let updatedImage = UIImage(data: imageData) {
+            profileImageView.image = updatedImage
+        }
+    }
+    
+    private func loadProfileImage() {
+        if let imageData = UserDefaults.standard.data(forKey: "userProfileImage"),
+           let savedImage = UIImage(data: imageData) {
+            profileImageView.image = savedImage
+        }
+    }
+    
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 }
 
@@ -356,7 +379,7 @@ extension HomeViewController: UICollectionViewDelegate, UICollectionViewDataSour
                     cell.transform = CGAffineTransform(scaleX: 1.05, y: 1.05)
                 }
             } else {
-                cell.backgroundColor = .systemGray6
+                cell.backgroundColor = .systemGray4
                 label.textColor = .white
                 cell.transform = .identity
             }
@@ -548,21 +571,51 @@ extension HomeViewController: UISearchResultsUpdating, UISearchBarDelegate {
         }
         searchController.isActive = false
     }
+    
+    func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
+        // Prevent any navigation when search begins
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
+    
+    func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
+        // Keep navigation disabled after search ends
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
+    }
 }
 
 // MARK: - CourseCollectionViewCellDelegate
 extension HomeViewController: CourseCollectionViewCellDelegate {
     func didTapBookmark(for cell: CourseCollectionViewCell) {
         if let indexPath = coursesCollectionView.indexPath(for: cell) {
-            // Bookmark işlemlerini burada yapabilirsiniz
-            print("Bookmark tapped for video at index: \(indexPath.item)")
+            let video = viewModel.videos[indexPath.item]
+            CoreDataManager.shared.saveBookmarkedVideo(
+                title: video.snippet.title,
+                videoUrl: "https://www.youtube.com/watch?v=\(video.id.videoId)",
+                thumbnailUrl: video.snippet.thumbnails.high.url
+            )
+            // Update cell UI
+            cell.configure(with: video, isBookmarked: true)
         }
     }
     
     func didTapDownload(for cell: CourseCollectionViewCell) {
         if let indexPath = coursesCollectionView.indexPath(for: cell) {
-            // Download işlemlerini burada yapabilirsiniz
-            print("Download tapped for video at index: \(indexPath.item)")
+            let video = viewModel.videos[indexPath.item]
+            CoreDataManager.shared.saveSavedVideo(
+                title: video.snippet.title,
+                videoUrl: "https://www.youtube.com/watch?v=\(video.id.videoId)",
+                thumbnailUrl: video.snippet.thumbnails.high.url,
+                isDownloaded: true
+            )
+            // Show success toast message
+            ToastManager.showToast(message: "Videoyu başarıyla indirdiniz", in: self)
+        }
+    }
+    
+    func didTapPlay(for cell: CourseCollectionViewCell) {
+        if let indexPath = coursesCollectionView.indexPath(for: cell) {
+            let video = viewModel.videos[indexPath.item]
+            playVideo(video)
         }
     }
 }

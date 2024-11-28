@@ -16,14 +16,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         let window = UIWindow(windowScene: windowScene)
-        let customTabBarController = CustomTabBarController()
+        let signInVC = SignInViewController()
+        let navigationController = UINavigationController(rootViewController: signInVC)
         
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         CoreDataManager.shared.persistentContainer = appDelegate.persistentContainer
         
         ThemeManager.shared.setupInitialTheme()
         
-        window.rootViewController = customTabBarController
+        window.rootViewController = navigationController
         window.makeKeyAndVisible()
         
         self.window = window

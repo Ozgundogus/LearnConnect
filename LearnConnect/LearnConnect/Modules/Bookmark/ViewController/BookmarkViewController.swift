@@ -1,7 +1,7 @@
 import UIKit
 
-class MyLearningViewController: UIViewController {
-    private var downloadedVideos: [SavedVideo] = []
+class BookmarkViewController: UIViewController {
+    private var bookmarkedVideos: [BookmarkedVideo] = []
     
     private lazy var collectionView: UICollectionView = {
         let layout = UICollectionViewFlowLayout()
@@ -23,11 +23,11 @@ class MyLearningViewController: UIViewController {
     
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
-        loadDownloadedVideos()
+        loadBookmarkedVideos()
     }
     
     private func setupUI() {
-        title = "My Learning"
+        title = "Bookmarks"
         view.backgroundColor = .systemBackground
         
         view.addSubview(collectionView)
@@ -40,12 +40,12 @@ class MyLearningViewController: UIViewController {
         ])
     }
     
-    private func loadDownloadedVideos() {
-        downloadedVideos = CoreDataManager.shared.fetchDownloadedVideos()
+    private func loadBookmarkedVideos() {
+        bookmarkedVideos = CoreDataManager.shared.fetchBookmarkedVideos()
         collectionView.reloadData()
     }
     
-    private func playVideo(_ video: SavedVideo) {
+    private func playVideo(_ video: BookmarkedVideo) {
         if let videoURL = video.videoUrl {
             let videoId = videoURL.components(separatedBy: "=").last ?? ""
             if let youtubeURL = URL(string: "youtube://\(videoId)"),
@@ -62,19 +62,35 @@ class MyLearningViewController: UIViewController {
     }
 }
 
-extension MyLearningViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
+extension BookmarkViewController: UICollectionViewDelegate, UICollectionViewDataSource, UICollectionViewDelegateFlowLayout {
     func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return downloadedVideos.count
+        return bookmarkedVideos.count
     }
     
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CourseCollectionViewCell.identifier, for: indexPath) as! CourseCollectionViewCell
-        let video = downloadedVideos[indexPath.item]
+        let video = bookmarkedVideos[indexPath.item]
         cell.delegate = self
         
-        // Configure cell with downloaded video
+        // Configure cell with bookmarked video
         if let videoURL = video.videoUrl, let thumbnailURL = video.thumbnailUrl {
             let videoId = videoURL.components(separatedBy: "=").last ?? ""
+            
+            // Create video snippet
+            let snippet = VideoSnippet(
+                title: video.title ?? "",
+                description: "",
+                thumbnails: Thumbnails(
+                    medium: ThumbnailInfo(url: thumbnailURL, width: 320, height: 180),
+                    high: ThumbnailInfo(url: thumbnailURL, width: 480, height: 360)
+                ),
+                channelTitle: "",
+                publishedAt: "",
+                categoryId: ""
+            )
+            
+            // Create video ID
+            let id = VideoID(videoId: videoId)
             
             // Create decoder and container for Video initialization
             let decoder = JSONDecoder()
@@ -95,7 +111,7 @@ extension MyLearningViewController: UICollectionViewDelegate, UICollectionViewDa
             
             if let data = data,
                let videoStruct = try? decoder.decode(Video.self, from: data) {
-                cell.configure(with: videoStruct)
+                cell.configure(with: videoStruct, isBookmarked: true)
             }
         }
         
@@ -108,33 +124,35 @@ extension MyLearningViewController: UICollectionViewDelegate, UICollectionViewDa
     }
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let video = downloadedVideos[indexPath.item]
+        let video = bookmarkedVideos[indexPath.item]
         playVideo(video)
     }
 }
 
 // MARK: - CourseCollectionViewCellDelegate
-extension MyLearningViewController: CourseCollectionViewCellDelegate {
+extension BookmarkViewController: CourseCollectionViewCellDelegate {
     func didTapBookmark(for cell: CourseCollectionViewCell) {
+        // Already bookmarked
+    }
+    
+    func didTapDownload(for cell: CourseCollectionViewCell) {
         if let indexPath = collectionView.indexPath(for: cell) {
-            let video = downloadedVideos[indexPath.item]
+            let video = bookmarkedVideos[indexPath.item]
             if let videoURL = video.videoUrl {
-                CoreDataManager.shared.saveBookmarkedVideo(
+                CoreDataManager.shared.saveSavedVideo(
                     title: video.title ?? "",
                     videoUrl: videoURL,
-                    thumbnailUrl: video.thumbnailUrl
+                    thumbnailUrl: video.thumbnailUrl,
+                    isDownloaded: true
                 )
+                ToastManager.showToast(message: "Videoyu başarıyla indirdiniz", in: self)
             }
         }
     }
     
-    func didTapDownload(for cell: CourseCollectionViewCell) {
-        // Already downloaded
-    }
-    
     func didTapPlay(for cell: CourseCollectionViewCell) {
         if let indexPath = collectionView.indexPath(for: cell) {
-            let video = downloadedVideos[indexPath.item]
+            let video = bookmarkedVideos[indexPath.item]
             playVideo(video)
         }
     }

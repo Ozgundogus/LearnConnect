@@ -123,6 +123,7 @@ extension CategoryDetailViewController: UICollectionViewDelegate, UICollectionVi
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: CourseCollectionViewCell.identifier, for: indexPath) as! CourseCollectionViewCell
         cell.configure(with: videos[indexPath.item])
+        cell.delegate = self
         return cell
     }
     
@@ -134,5 +135,42 @@ extension CategoryDetailViewController: UICollectionViewDelegate, UICollectionVi
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         let video = videos[indexPath.item]
         playVideo(video)
+    }
+}
+
+// MARK: - CourseCollectionViewCellDelegate
+extension CategoryDetailViewController: CourseCollectionViewCellDelegate {
+    func didTapBookmark(for cell: CourseCollectionViewCell) {
+        if let indexPath = collectionView.indexPath(for: cell) {
+            let video = videos[indexPath.item]
+            CoreDataManager.shared.saveBookmarkedVideo(
+                title: video.snippet.title,
+                videoUrl: "https://www.youtube.com/watch?v=\(video.id.videoId)",
+                thumbnailUrl: video.snippet.thumbnails.high.url
+            )
+            // Update cell UI
+            cell.configure(with: video, isBookmarked: true)
+        }
+    }
+    
+    func didTapDownload(for cell: CourseCollectionViewCell) {
+        if let indexPath = collectionView.indexPath(for: cell) {
+            let video = videos[indexPath.item]
+            CoreDataManager.shared.saveSavedVideo(
+                title: video.snippet.title,
+                videoUrl: "https://www.youtube.com/watch?v=\(video.id.videoId)",
+                thumbnailUrl: video.snippet.thumbnails.high.url,
+                isDownloaded: true
+            )
+            // Show success toast message
+            ToastManager.showToast(message: "Videoyu başarıyla indirdiniz", in: self)
+        }
+    }
+    
+    func didTapPlay(for cell: CourseCollectionViewCell) {
+        if let indexPath = collectionView.indexPath(for: cell) {
+            let video = videos[indexPath.item]
+            playVideo(video)
+        }
     }
 } 
