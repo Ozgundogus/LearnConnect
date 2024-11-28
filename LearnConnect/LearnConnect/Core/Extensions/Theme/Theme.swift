@@ -68,7 +68,6 @@ enum Theme: Int {
     }
 }
 
-// Theme Manager
 class ThemeManager {
     static let shared = ThemeManager()
     private init() {}
@@ -105,12 +104,10 @@ class ThemeManager {
     }
 }
 
-// Notification extension
 extension Notification.Name {
     static let themeDidChange = Notification.Name("themeDidChange")
 }
 
-// UIViewController extension for theme support
 extension UIViewController {
     func setupTheme() {
         view.backgroundColor = ThemeManager.shared.currentTheme.backgroundColor

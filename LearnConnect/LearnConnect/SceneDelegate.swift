@@ -16,18 +16,41 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         guard let windowScene = (scene as? UIWindowScene) else { return }
         
         let window = UIWindow(windowScene: windowScene)
-        let signInVC = SignInViewController()
-        let navigationController = UINavigationController(rootViewController: signInVC)
+        
         
         let appDelegate = UIApplication.shared.delegate as! AppDelegate
         CoreDataManager.shared.persistentContainer = appDelegate.persistentContainer
         
+        
         ThemeManager.shared.setupInitialTheme()
         
-        window.rootViewController = navigationController
-        window.makeKeyAndVisible()
         
+        let loadingVC = LoadingViewController()
+        window.rootViewController = loadingVC
+        window.makeKeyAndVisible()
         self.window = window
+        
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3.0) { [weak self] in
+            self?.showMainInterface()
+        }
+    }
+
+    private func showMainInterface() {
+       
+        if UserDefaults.standard.bool(forKey: "isUserLoggedIn") {
+            
+            let tabBarController = CustomTabBarController()
+            switchRootViewController(to: tabBarController)
+        } else {
+           
+            let signInVC = SignInViewController()
+            let navigationController = UINavigationController(rootViewController: signInVC)
+            switchRootViewController(to: navigationController)
+        }
+        
+       
+        NotificationManager.shared.requestAuthorization()
     }
 
     func sceneDidDisconnect(_ scene: UIScene) {
@@ -56,6 +79,22 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // Called as the scene transitions from the foreground to the background.
         // Use this method to save data, release shared resources, and store enough scene-specific state information
         // to restore the scene back to its current state.
+    }
+
+    
+    func switchRootViewController(to viewController: UIViewController, animated: Bool = true) {
+        guard let window = self.window else { return }
+        
+        if animated {
+            UIView.transition(with: window,
+                            duration: 0.3,
+                            options: .transitionCrossDissolve,
+                            animations: {
+                window.rootViewController = viewController
+            })
+        } else {
+            window.rootViewController = viewController
+        }
     }
 
 }

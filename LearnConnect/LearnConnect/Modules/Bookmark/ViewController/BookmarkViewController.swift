@@ -16,6 +16,17 @@ class BookmarkViewController: UIViewController {
         return collectionView
     }()
     
+    private let emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Henüz bir videoyu bookmark olarak eklemediniz"
+        label.textAlignment = .center
+        label.textColor = .gray
+        label.font = .systemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -31,18 +42,26 @@ class BookmarkViewController: UIViewController {
         view.backgroundColor = .systemBackground
         
         view.addSubview(collectionView)
+        view.addSubview(emptyStateLabel)
         
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyStateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
     private func loadBookmarkedVideos() {
         bookmarkedVideos = CoreDataManager.shared.fetchBookmarkedVideos()
         collectionView.reloadData()
+        
+       
+        emptyStateLabel.isHidden = !bookmarkedVideos.isEmpty
+        collectionView.isHidden = bookmarkedVideos.isEmpty
     }
     
     private func playVideo(_ video: BookmarkedVideo) {
@@ -50,10 +69,10 @@ class BookmarkViewController: UIViewController {
             let videoId = videoURL.components(separatedBy: "=").last ?? ""
             if let youtubeURL = URL(string: "youtube://\(videoId)"),
                UIApplication.shared.canOpenURL(youtubeURL) {
-                // YouTube uygulaması yüklüyse onu aç
+                
                 UIApplication.shared.open(youtubeURL)
             } else if let webURL = URL(string: videoURL) {
-                // YouTube uygulaması yoksa web'de aç
+                
                 let videoPlayerVC = VideoPlayerViewController(videoURL: webURL)
                 videoPlayerVC.modalPresentationStyle = .fullScreen
                 present(videoPlayerVC, animated: true)
@@ -72,11 +91,11 @@ extension BookmarkViewController: UICollectionViewDelegate, UICollectionViewData
         let video = bookmarkedVideos[indexPath.item]
         cell.delegate = self
         
-        // Configure cell with bookmarked video
+        
         if let videoURL = video.videoUrl, let thumbnailURL = video.thumbnailUrl {
             let videoId = videoURL.components(separatedBy: "=").last ?? ""
             
-            // Create video snippet
+           
             let snippet = VideoSnippet(
                 title: video.title ?? "",
                 description: "",
@@ -89,10 +108,10 @@ extension BookmarkViewController: UICollectionViewDelegate, UICollectionViewData
                 categoryId: ""
             )
             
-            // Create video ID
+           
             let id = VideoID(videoId: videoId)
             
-            // Create decoder and container for Video initialization
+           
             let decoder = JSONDecoder()
             let data = try? JSONSerialization.data(withJSONObject: [
                 "id": ["videoId": videoId],
@@ -132,7 +151,7 @@ extension BookmarkViewController: UICollectionViewDelegate, UICollectionViewData
 // MARK: - CourseCollectionViewCellDelegate
 extension BookmarkViewController: CourseCollectionViewCellDelegate {
     func didTapBookmark(for cell: CourseCollectionViewCell) {
-        // Already bookmarked
+       
     }
     
     func didTapDownload(for cell: CourseCollectionViewCell) {

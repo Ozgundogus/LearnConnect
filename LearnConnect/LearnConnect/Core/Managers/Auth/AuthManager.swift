@@ -8,7 +8,6 @@ class AuthManager {
     func signUp(username: String, email: String, password: String, completion: @escaping (Bool) -> Void) {
         let context = CoreDataManager.shared.persistentContainer.viewContext
         
-        // Check if user already exists
         let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
         fetchRequest.predicate = NSPredicate(format: "username == %@ OR email == %@", username, email)
         
@@ -19,7 +18,6 @@ class AuthManager {
                 return
             }
             
-            // Create new user
             let user = User(context: context)
             user.username = username
             user.email = email

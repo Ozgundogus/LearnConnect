@@ -107,7 +107,7 @@ class ProfileViewController: UIViewController {
     }
     
     private func setupUI() {
-        title = "Profil"
+        title = "Profile"
         view.backgroundColor = .systemBackground
         
         view.addSubview(profileImageView)
@@ -190,7 +190,7 @@ class ProfileViewController: UIViewController {
                 emailTextField.text = user.email
                 passwordTextField.text = user.password
                 
-                // Load profile image
+               
                 if let imageData = UserDefaults.standard.data(forKey: "userProfileImage"),
                    let savedImage = UIImage(data: imageData) {
                     profileImageView.image = savedImage
@@ -210,7 +210,7 @@ class ProfileViewController: UIViewController {
     
     @objc private func editButtonTapped() {
         let alertController = UIAlertController(
-            title: "Profil Fotoğrafını Değiştir",
+            title: "Profile Fotoğrafını Değiştir",
             message: nil,
             preferredStyle: .actionSheet
         )
@@ -229,7 +229,7 @@ class ProfileViewController: UIViewController {
         alertController.addAction(photoLibraryAction)
         alertController.addAction(cancelAction)
         
-        // iPad için popover presentation
+        
         if let popoverController = alertController.popoverPresentationController {
             popoverController.sourceView = editButton
             popoverController.sourceRect = editButton.bounds
@@ -329,17 +329,17 @@ class ProfileViewController: UIViewController {
               let email = emailTextField.text,
               let password = passwordTextField.text else { return }
         
-        // Check if fields are not empty
+       
         guard !username.isEmpty && !email.isEmpty && !password.isEmpty else {
             ToastManager.showToast(message: "Lütfen tüm alanları doldurun", in: self, isError: true)
             return
         }
         
-        // Update user in Core Data
+        
         if let user = currentUser {
             let context = CoreDataManager.shared.context
             
-            // Check if username or email is already taken by another user
+            
             let fetchRequest: NSFetchRequest<User> = User.fetchRequest()
             fetchRequest.predicate = NSPredicate(format: "(username == %@ OR email == %@) AND self != %@", username, email, user)
             
@@ -350,17 +350,17 @@ class ProfileViewController: UIViewController {
                     return
                 }
                 
-                // Update user information
+               
                 user.username = username
                 user.email = email
                 user.password = password
                 
-                // Save profile image if changed
+               
                 if isProfileImageChanged, let newImage = selectedProfileImage {
                     if let imageData = newImage.jpegData(compressionQuality: 0.7) {
                         UserDefaults.standard.set(imageData, forKey: "userProfileImage")
                         
-                        // Notify other view controllers about profile image change
+                        
                         NotificationCenter.default.post(
                             name: NSNotification.Name("ProfileImageDidChange"),
                             object: imageData
@@ -381,7 +381,7 @@ class ProfileViewController: UIViewController {
     @objc private func themeToggleTapped() {
         let newTheme: Theme = ThemeManager.shared.currentTheme == .light ? .dark : .light
         
-        // Animasyonlu geçiş
+        
         UIView.animate(withDuration: 0.3, animations: {
             self.themeToggleButton.transform = CGAffineTransform(rotationAngle: .pi)
         }) { _ in
@@ -401,7 +401,7 @@ class ProfileViewController: UIViewController {
             .withConfiguration(UIImage.SymbolConfiguration(pointSize: 16, weight: .medium))
         themeToggleButton.setImage(image, for: .normal)
         
-        // Container'ın arka plan rengini güncelle
+       
         UIView.animate(withDuration: 0.3) {
             self.themeContainer.backgroundColor = currentTheme == .light ? 
                 .systemGray6.withAlphaComponent(0.3) : 

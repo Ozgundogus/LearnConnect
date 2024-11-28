@@ -44,7 +44,7 @@ class HomeViewModel {
     func searchVideos(with query: String) {
         searchText = query
         if query.isEmpty {
-            fetchVideos() // Eğer arama boşsa, trending videoları göster
+            fetchVideos() 
             return
         }
         

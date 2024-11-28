@@ -16,6 +16,17 @@ class MyLearningViewController: UIViewController {
         return collectionView
     }()
     
+    private let emptyStateLabel: UILabel = {
+        let label = UILabel()
+        label.text = "Henüz bir video indirmediniz"
+        label.textAlignment = .center
+        label.textColor = .gray
+        label.font = .systemFont(ofSize: 16)
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.isHidden = true
+        return label
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         setupUI()
@@ -31,18 +42,26 @@ class MyLearningViewController: UIViewController {
         view.backgroundColor = .systemBackground
         
         view.addSubview(collectionView)
+        view.addSubview(emptyStateLabel)
         
         NSLayoutConstraint.activate([
             collectionView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor),
             collectionView.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 16),
             collectionView.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -16),
-            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+            collectionView.bottomAnchor.constraint(equalTo: view.bottomAnchor),
+            
+            emptyStateLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor),
+            emptyStateLabel.centerYAnchor.constraint(equalTo: view.centerYAnchor)
         ])
     }
     
     private func loadDownloadedVideos() {
         downloadedVideos = CoreDataManager.shared.fetchDownloadedVideos()
         collectionView.reloadData()
+        
+        // Boş durum kontrolü
+        emptyStateLabel.isHidden = !downloadedVideos.isEmpty
+        collectionView.isHidden = downloadedVideos.isEmpty
     }
     
     private func playVideo(_ video: SavedVideo) {
@@ -50,10 +69,10 @@ class MyLearningViewController: UIViewController {
             let videoId = videoURL.components(separatedBy: "=").last ?? ""
             if let youtubeURL = URL(string: "youtube://\(videoId)"),
                UIApplication.shared.canOpenURL(youtubeURL) {
-                // YouTube uygulaması yüklüyse onu aç
+                
                 UIApplication.shared.open(youtubeURL)
             } else if let webURL = URL(string: videoURL) {
-                // YouTube uygulaması yoksa web'de aç
+                
                 let videoPlayerVC = VideoPlayerViewController(videoURL: webURL)
                 videoPlayerVC.modalPresentationStyle = .fullScreen
                 present(videoPlayerVC, animated: true)
@@ -72,11 +91,11 @@ extension MyLearningViewController: UICollectionViewDelegate, UICollectionViewDa
         let video = downloadedVideos[indexPath.item]
         cell.delegate = self
         
-        // Configure cell with downloaded video
+        
         if let videoURL = video.videoUrl, let thumbnailURL = video.thumbnailUrl {
             let videoId = videoURL.components(separatedBy: "=").last ?? ""
             
-            // Create decoder and container for Video initialization
+            
             let decoder = JSONDecoder()
             let data = try? JSONSerialization.data(withJSONObject: [
                 "id": ["videoId": videoId],
@@ -103,7 +122,7 @@ extension MyLearningViewController: UICollectionViewDelegate, UICollectionViewDa
     }
     
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
-        let width = (collectionView.bounds.width - 10) / 2 // 2 columns with 10pt spacing
+        let width = (collectionView.bounds.width - 10) / 2
         return CGSize(width: width, height: width * 1.4)
     }
     
@@ -129,7 +148,7 @@ extension MyLearningViewController: CourseCollectionViewCellDelegate {
     }
     
     func didTapDownload(for cell: CourseCollectionViewCell) {
-        // Already downloaded
+        
     }
     
     func didTapPlay(for cell: CourseCollectionViewCell) {
