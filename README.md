@@ -2,6 +2,8 @@
 
 LearnConnect, kullanıcıların video tabanlı eğitim içeriklerine erişebileceği, kişiselleştirilmiş öğrenme deneyimi sunan modern bir iOS uygulamasıdır.
 
+[📱 Demo Videosu İzle](https://www.youtube.com/watch?v=Qa8hX0Zbqn4)
+
 ## 🌟 Özellikler
 
 ### 📱 Kullanıcı Arayüzü
