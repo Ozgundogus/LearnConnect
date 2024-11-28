@@ -38,24 +38,27 @@ class CustomTabBarController: UITabBarController {
             image: UIImage(systemName: "house"),
             selectedImage: UIImage(systemName: "house.fill")
         )
+        homeNav.interactivePopGestureRecognizer?.isEnabled = false
         
         // My Learning Tab
-        let learningVC = UIViewController() // Daha sonra MyLearningViewController ile değiştirilecek
+        let learningVC = MyLearningViewController()
         let learningNav = UINavigationController(rootViewController: learningVC)
         learningNav.tabBarItem = UITabBarItem(
             title: "My Learning",
             image: UIImage(systemName: "book"),
             selectedImage: UIImage(systemName: "book.fill")
         )
+        learningNav.interactivePopGestureRecognizer?.isEnabled = false
         
         // Bookmark Tab
-        let bookmarkVC = UIViewController() // Daha sonra BookmarkViewController ile değiştirilecek
+        let bookmarkVC = BookmarkViewController()
         let bookmarkNav = UINavigationController(rootViewController: bookmarkVC)
         bookmarkNav.tabBarItem = UITabBarItem(
             title: "Bookmark",
             image: UIImage(systemName: "bookmark"),
             selectedImage: UIImage(systemName: "bookmark.fill")
         )
+        bookmarkNav.interactivePopGestureRecognizer?.isEnabled = false
         
         // Profile Tab
         let profileVC = ProfileViewController()
@@ -65,6 +68,15 @@ class CustomTabBarController: UITabBarController {
             image: UIImage(systemName: "person"),
             selectedImage: UIImage(systemName: "person.fill")
         )
+        profileNav.interactivePopGestureRecognizer?.isEnabled = false
+        
+        // Configure each navigation controller
+        [homeNav, learningNav, bookmarkNav, profileNav].forEach { nav in
+            nav.isNavigationBarHidden = false
+            nav.navigationBar.prefersLargeTitles = true
+            nav.modalPresentationStyle = .fullScreen
+            nav.definesPresentationContext = true
+        }
         
         // Set ViewControllers
         viewControllers = [homeNav, learningNav, bookmarkNav, profileNav]

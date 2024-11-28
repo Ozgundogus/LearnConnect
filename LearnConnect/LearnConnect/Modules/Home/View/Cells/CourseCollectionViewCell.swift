@@ -3,6 +3,7 @@ import UIKit
 protocol CourseCollectionViewCellDelegate: AnyObject {
     func didTapBookmark(for cell: CourseCollectionViewCell)
     func didTapDownload(for cell: CourseCollectionViewCell)
+    func didTapPlay(for cell: CourseCollectionViewCell)
 }
 
 class CourseCollectionViewCell: UICollectionViewCell {
@@ -113,6 +114,7 @@ class CourseCollectionViewCell: UICollectionViewCell {
         
         bookmarkButton.addTarget(self, action: #selector(bookmarkTapped), for: .touchUpInside)
         downloadButton.addTarget(self, action: #selector(downloadTapped), for: .touchUpInside)
+        playButton.addTarget(self, action: #selector(playTapped), for: .touchUpInside)
     }
     
     // MARK: - Actions
@@ -124,6 +126,10 @@ class CourseCollectionViewCell: UICollectionViewCell {
     
     @objc private func downloadTapped() {
         delegate?.didTapDownload(for: self)
+    }
+    
+    @objc private func playTapped() {
+        delegate?.didTapPlay(for: self)
     }
     
     private func updateBookmarkIcon() {
